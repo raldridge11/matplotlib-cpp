@@ -31,6 +31,7 @@ namespace matplotlibcpp {
 
     struct _interpreter {
       PyObject *s_python_function_show;
+      PyObject *s_python_function_close;
       PyObject *s_python_function_draw;
       PyObject *s_python_function_pause;
       PyObject *s_python_function_save;
@@ -116,6 +117,7 @@ namespace matplotlibcpp {
         if(!pylabmod) { throw std::runtime_error("Error loading module pylab!"); }
 
         s_python_function_show = PyObject_GetAttrString(pymod, "show");
+        s_python_function_close = PyObject_GetAttrString(pymod, "close");
         s_python_function_draw = PyObject_GetAttrString(pymod, "draw");
         s_python_function_pause = PyObject_GetAttrString(pymod, "pause");
         s_python_function_figure = PyObject_GetAttrString(pymod, "figure");
@@ -138,6 +140,7 @@ namespace matplotlibcpp {
         s_python_function_tight_layout = PyObject_GetAttrString(pymod, "tight_layout");
 
         if(        !s_python_function_show
+          || !s_python_function_close
           || !s_python_function_draw
           || !s_python_function_pause
           || !s_python_function_figure
@@ -161,6 +164,7 @@ namespace matplotlibcpp {
         ) { throw std::runtime_error("Couldn't find required function!"); }
 
         if (       !PyFunction_Check(s_python_function_show)
+          || !PyFunction_Check(s_python_function_close)
           || !PyFunction_Check(s_python_function_draw)
           || !PyFunction_Check(s_python_function_pause)
           || !PyFunction_Check(s_python_function_figure)
@@ -673,11 +677,21 @@ namespace matplotlibcpp {
             res = PyObject_Call( detail::_interpreter::get().s_python_function_show, detail::_interpreter::get().s_python_empty_tuple, kwargs);
         }
 
+    if (!res) throw std::runtime_error("Call to show() failed.");
 
-        if (!res) throw std::runtime_error("Call to show() failed.");
+    Py_DECREF(res);
+  }
 
-        Py_DECREF(res);
-    }
+  inline void close()
+  {
+    PyObject* res = PyObject_CallObject(
+      detail::_interpreter::get().s_python_function_close,
+      detail::_interpreter::get().s_python_empty_tuple);
+
+    if (!res) throw std::runtime_error("Call to close() failed.");
+
+    Py_DECREF(res);
+  }
 
   inline void draw()
   {
